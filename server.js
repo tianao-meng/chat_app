@@ -3,13 +3,14 @@ const {  ApolloServerPluginLandingPageGraphQLPlayground} = require('apollo-serve
 const {sequelize} = require('./models');
 
 
-const resolvers = require('./graphql/resolver');
+const resolvers = require('./graphql/resolvers');
 const typeDefs = require('./graphql/typeDefs'); 
+const contextMiddleware = require('./util/contextMiddleware');
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context:(ctx => ctx),
+  context: contextMiddleware,
   plugins: [
     ApolloServerPluginLandingPageGraphQLPlayground({
       // options
