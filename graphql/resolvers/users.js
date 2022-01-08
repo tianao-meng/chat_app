@@ -1,4 +1,4 @@
-const {User} = require('../../models')
+const {User, Message} = require('../../models')
 const bcrypt = require('bcryptjs')
 const {UserInputError, AuthenticationError} = require('apollo-server')
 const jwt = require('jsonwebtoken');
@@ -13,9 +13,22 @@ module.exports  = {
                 throw new AuthenticationError('Unauthencated');
             }
             console.log(user)
-            const users = await User.findAll({where:{
-                username:{[Op.ne]:user.username}
-            }});
+            let users = await User.findAll({
+                attributes: ['username', 'imageUrl', 'createdAt'],
+                where:{username:{[Op.ne]:user.username}}});
+            
+            const allUserMessages = await Message.findAll({
+                where: {[Op.or]: [{ from: user.username }, { to: user.username }]},
+                order: [['createdAt', 'DESC']]
+            })
+
+            users = users.map(otherUser => {
+                const latestMessage = allUserMessages.find(
+                    m => m.from === otherUser.username || m.to === otherUser.username
+                )
+                otherUser.latestMessage = latestMessage;
+                return otherUser;
+            })
             return users;
           } catch (err) {
               console.log(err);
@@ -48,7 +61,6 @@ module.exports  = {
               }, JWT_SECRET , { expiresIn: 60 * 60 });
               return {
                   ...user.toJSON(),
-                  createdAt:user.createdAt.toISOString(),
                   token
               };
 

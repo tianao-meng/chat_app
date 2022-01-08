@@ -25,6 +25,7 @@ export default function Login(props) {
       const[errors, setErrors] = useState({});
       const [loginUser, {data,loading}] = useLazyQuery(LOGIN_USER, {
           onError: (err)=>{
+              console.error(err);
               console.log(err.graphQLErrors[0].extensions.errors)
               setErrors(err.graphQLErrors[0].extensions.errors)
           },
