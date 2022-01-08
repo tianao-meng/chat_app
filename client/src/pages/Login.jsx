@@ -3,6 +3,7 @@ import {Row, Col, Form, Button} from 'react-bootstrap'
 import {useState} from 'react'
 import { gql, useLazyQuery } from '@apollo/client';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuthDispatch } from '../context/auth';
 
 const LOGIN_USER = gql`
   query login($username: String!,$password: String!) {
@@ -16,6 +17,7 @@ const LOGIN_USER = gql`
 `;
 export default function Login(props) {
     const navigate = useNavigate();
+    const dispatch = useAuthDispatch();
     const [variables, setVariables] = useState({
         username:'',
         password:'',
@@ -30,7 +32,8 @@ export default function Login(props) {
             if(!data){
                 return;
             }
-            localStorage.setItem('token', data.login.token);
+            
+            dispatch({type: 'LOGIN', payload: data.login});
             navigate('/');
           }
       });
