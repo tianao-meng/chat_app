@@ -23,13 +23,15 @@ export default function Messages() {
     const selectedUser = users ? users.find(user => user.selected === true) : null;
     const messages = selectedUser ? selectedUser.messages : null;
     const [getMessages, {loading: messagesLoading, data: messageData}] = useLazyQuery(GET_MESSAGES)
-
+    
     useEffect(() => {
+        // console.log(selectedUser)
         if(selectedUser && !selectedUser.messages){
             getMessages({variables: {from: selectedUser.username}});
         }
     }, [selectedUser]);
     useEffect(() => {
+        // console.log(messageData);
         if(messageData){
             dispatch({type: 'SET_USER_MESSAGES', payload:{
                 username: selectedUser.username,

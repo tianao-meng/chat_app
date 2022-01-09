@@ -8,12 +8,12 @@ import Messages from './Messages'
 
 
 export default function Home() {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const dispatch = useAuthDispatch();
 
     const logout = () => {
         dispatch({type: 'LOGOUT'});
-        navigate('/login');
+        window.location.href = 'login';
     }
 
     return (
