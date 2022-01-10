@@ -1,6 +1,6 @@
-import React from 'react'
-import { Col } from 'react-bootstrap'
-import { gql, useLazyQuery } from '@apollo/client';
+import React , {useState}from 'react'
+import { Col, Form} from 'react-bootstrap'
+import { gql, useLazyQuery, useMutation } from '@apollo/client';
 import {useEffect} from 'react';
 import {useMessageDispatch, useMessageState} from '../../context/message'
 import Message from './Message'
@@ -17,14 +17,36 @@ const GET_MESSAGES = gql`
     }
 `;
 
+const SEND_MESSAGE = gql`
+    mutation sendMessage($to:String! $content:String!){
+        sendMessage(to: $to, content:$content){
+            uuid
+            from
+            to
+            content
+            createdAt
+        }
+    }
+`
+
 export default function Messages() {
     const dispatch = useMessageDispatch();
     const {users} = useMessageState();
 
+    const [content, setContent] = useState('')
+
     const selectedUser = users ? users.find(user => user.selected === true) : null;
     const messages = selectedUser ? selectedUser.messages : null;
+
     const [getMessages, {loading: messagesLoading, data: messageData}] = useLazyQuery(GET_MESSAGES)
-    
+    const [sendMessage ] = useMutation(SEND_MESSAGE, {
+        onError: (err)=> console.log(err),
+        onCompleted: (data) => {
+            setContent('');
+            dispatch({type:'ADD_MESSAGE', payload: {username: selectedUser.username, message: data.sendMessage}})
+        }
+    })
+
     useEffect(() => {
         // console.log(selectedUser)
         if(selectedUser && !selectedUser.messages){
@@ -44,11 +66,11 @@ export default function Messages() {
     let selectedChatMarkup;
 
     if (messagesLoading){
-        selectedChatMarkup = <p> Loading ... </p> 
+        selectedChatMarkup = <p className="info-text"> Loading ... </p> 
     } else{
         if(!messages){
 
-            selectedChatMarkup =  <p> Find a user to have a chat </p>
+            selectedChatMarkup =  <p className="info-text"> Find a user to have a chat </p>
 
         } else if(messages.length > 0) {
 
@@ -57,13 +79,34 @@ export default function Messages() {
             ))
 
         } else {
-            selectedChatMarkup =  <p> You can send your first message </p>
+            selectedChatMarkup =  <p className="info-text"> You can send your first message </p>
         }
     }
 
+    const submitMessage = (e) => {
+        e.preventDefault();
+        if(content.trim() === '' || !selectedUser){
+            return;
+        }
+        sendMessage({variables: {to: selectedUser.username, content}})
+        // mutation for sending message 
+    }
+
     return (
-        <Col className="messages-box d-flex flex-column-reverse" xs={10} md={8}>
-            {selectedChatMarkup}
+        <Col  xs={10} md={8}>
+            <div className="messages-box d-flex flex-column-reverse">
+                {selectedChatMarkup}
+            </div>
+            
+            <div>
+
+                <Form onSubmit={submitMessage}>
+                    <Form.Group className="d-flex align-items-center mb-3">
+                        <Form.Control type="text" className="message-input rounded-pill bg-secondary border-0 p-4 " placeholder="Type a message..." value={content} onChange={e => setContent(e.target.value)} />
+                        <i role="button" className="fas fa-paper-plane fa-2x text-primary ms-2" onClick={submitMessage}></i>
+                    </Form.Group>
+                </Form>
+            </div>
         </Col>
     )
 }
