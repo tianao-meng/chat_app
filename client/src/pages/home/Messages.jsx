@@ -41,10 +41,6 @@ export default function Messages() {
     const [getMessages, {loading: messagesLoading, data: messageData}] = useLazyQuery(GET_MESSAGES)
     const [sendMessage ] = useMutation(SEND_MESSAGE, {
         onError: (err)=> console.log(err),
-        onCompleted: (data) => {
-            setContent('');
-            dispatch({type:'ADD_MESSAGE', payload: {username: selectedUser.username, message: data.sendMessage}})
-        }
     })
 
     useEffect(() => {
@@ -88,6 +84,7 @@ export default function Messages() {
         if(content.trim() === '' || !selectedUser){
             return;
         }
+        setContent('');
         sendMessage({variables: {to: selectedUser.username, content}})
         // mutation for sending message 
     }

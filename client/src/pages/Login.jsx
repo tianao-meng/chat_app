@@ -35,7 +35,7 @@ export default function Login(props) {
             }
             
             dispatch({type: 'LOGIN', payload: data.login});
-            navigate('/');
+            window.location.href = '/';
           }
       });
       const submitLoginForm = e => {

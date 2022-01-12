@@ -1,6 +1,7 @@
 const {User, Message} = require('../../models')
-const {UserInputError, AuthenticationError} = require('apollo-server')
+const {UserInputError, AuthenticationError, withFilter} = require('apollo-server')
 const {Op} = require('sequelize')
+
 module.exports  = {
 
     Query: {
@@ -26,6 +27,8 @@ module.exports  = {
                     order: [['createdAt', 'DESC']]
                 })
 
+
+
                 return messages;
             } catch(err){
                 console.log(err);
@@ -36,7 +39,7 @@ module.exports  = {
 
     },
     Mutation: {
-        sendMessage: async (parent, {to, content}, {user}) => {
+        sendMessage: async (parent, {to, content}, {user, pubsub}) => {
 
             try {
                 if(!user){
@@ -62,12 +65,30 @@ module.exports  = {
                     content
                 })
 
+                pubsub.publish('NEW_MESSAGE', {newMessage: message});
+
                 return message;
 
             } catch (err) {
                 console.log(err);
                 throw err;
             }
+        }
+    },
+    Subscription:{
+        newMessage: {
+            subscribe:  withFilter(
+                (_, __, {pubsub, user}) => {
+                    if(!user) throw new AuthenticationError('Unauthencated');
+                    return pubsub.asyncIterator(['NEW_MESSAGE'])
+                },
+                ({newMessage}, _, {user}) => {
+                    if(newMessage.from === user.username || newMessage.to === user.username){
+                        return true;
+                    }
+                    return false;
+                }
+            )
         }
     }
   };
