@@ -24,7 +24,8 @@ module.exports  = {
                         from: {[Op.in]: usernames},
                         to: {[Op.in]: usernames},
                     },
-                    order: [['createdAt', 'DESC']]
+                    order: [['createdAt', 'DESC']],
+                    include:[{model: Reaction, as: 'reactions'}]
                 })
 
 
@@ -75,6 +76,7 @@ module.exports  = {
             }
         },
         reactToMessage: async (_, {uuid, content}, {user, pubsub}) => {
+            
             const reactions = ['❤️', '😆', '😯', '😢', '😡', '👍', '👎']
             try {
                 // validate reaction content
@@ -109,6 +111,7 @@ module.exports  = {
                     })
      
                 }
+                
                 pubsub.publish('NEW_REACTION', {newReaction: reaction});
                 return reaction;
             } catch (err) {
@@ -134,12 +137,13 @@ module.exports  = {
         newReaction: {
             subscribe:  withFilter(
                 (_, __, {pubsub, user}) => {
+                    
                     if(!user) throw new AuthenticationError('Unauthencated');
                     return pubsub.asyncIterator('NEW_REACTION')
                 },
                 async ({newReaction}, _, {user}) => {
-                    
                     const message = await newReaction.getMessage();
+                    
                     
                     if(message.from === user.username || message.to === user.username){
                         return true;

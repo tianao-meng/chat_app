@@ -13,6 +13,10 @@ const GET_MESSAGES = gql`
             to
 		    from
             createdAt
+            reactions{
+                content
+                uuid
+            }
         }
     }
 `;
@@ -90,15 +94,15 @@ export default function Messages() {
     }
 
     return (
-        <Col  xs={10} md={8}>
-            <div className="messages-box d-flex flex-column-reverse">
+        <Col className="p-0" xs={10} md={8}>
+            <div className="messages-box d-flex flex-column-reverse p-4">
                 {selectedChatMarkup}
             </div>
             
-            <div>
+            <div className="px-3 py-2">
 
                 <Form onSubmit={submitMessage}>
-                    <Form.Group className="d-flex align-items-center mb-3">
+                    <Form.Group className="d-flex align-items-center m-0">
                         <Form.Control type="text" className="message-input rounded-pill bg-secondary border-0 p-4 " placeholder="Type a message..." value={content} onChange={e => setContent(e.target.value)} />
                         <i role="button" className="fas fa-paper-plane fa-2x text-primary ms-2" onClick={submitMessage}></i>
                     </Form.Group>

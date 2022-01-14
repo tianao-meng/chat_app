@@ -15,14 +15,15 @@ type Message {
     to: String!,
     from: String!,
     createdAt:String!,
+    reactions: [Reaction]
 }
 
 type Reaction {
     uuid: String!,
     content: String!,
     createdAt:String!,
-    Message: Message!,
-    User: User!,
+    message: Message!,
+    user: User!,
 }
 
 type Query {
