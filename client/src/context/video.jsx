@@ -8,15 +8,10 @@ const VideoDispatchContext = createContext();
 
 const videoReducer = (state, action) => {
     switch (action.type) {
-        case 'SET_PC': 
+        case 'SET_P2P_CLIENT': 
             return {
                 ...state,
-                pc: action.payload
-            }
-        case 'SET_STREAM': 
-            return {
-                ...state,
-                stream: action.payload
+                p2pClient: action.payload
             }
         default:
             throw new Error(`Unknown action type: ${action.type}`)
@@ -25,7 +20,7 @@ const videoReducer = (state, action) => {
 
 export const VideoProvider = ({children}) => {
 
-    const [state, dispatch] = useReducer(videoReducer, {pc: null, stream: null});
+    const [state, dispatch] = useReducer(videoReducer, {p2pClient: null});
     return (
        <VideoDispatchContext.Provider value={dispatch}>
            <VideoStateContext.Provider value={state}>

@@ -4,34 +4,10 @@ import { gql, useLazyQuery, useMutation } from '@apollo/client';
 import {useEffect} from 'react';
 import {useMessageDispatch, useMessageState} from '../../context/message'
 import Message from './Message'
+import {SEND_MESSAGE} from '../../util/mutationGql'
 
-const GET_MESSAGES = gql`
-    query getMessages($from: String!){
-        getMessages(from: $from){
-            uuid
-            content
-            to
-		    from
-            createdAt
-            reactions{
-                content
-                uuid
-            }
-        }
-    }
-`;
+import {GET_MESSAGES} from '../../util/queryGql'
 
-const SEND_MESSAGE = gql`
-    mutation sendMessage($to:String! $content:String!){
-        sendMessage(to: $to, content:$content){
-            uuid
-            from
-            to
-            content
-            createdAt
-        }
-    }
-`
 
 export default function Messages({setInvitedTo}) {
     const dispatch = useMessageDispatch();

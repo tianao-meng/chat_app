@@ -34,6 +34,12 @@ module.exports  = {
             const iceRes = {from: user.username, to, ice};
             pubsub.publish('NEW_ICE_RESPONSE', {newIce: iceRes});
             return iceRes;
+        },
+        hangup: async (parent, {to}, {pubsub, user}) => {
+            if(!user) throw new AuthenticationError('Unauthencated');
+            const hangUpRes = {success: true, to};
+            pubsub.publish('HANG_UP', {newHangUp: hangUpRes})
+            return hangUpRes; 
         }
 
     },
@@ -97,6 +103,22 @@ module.exports  = {
                 async ({newIce}, _, {user}) => {
                     console.log('newIce: ', newIce); 
                     if(newIce.to === user.username){
+                        return true;
+                    }
+                    return false;
+                }
+            )
+        },
+        newHangUp: {
+            subscribe:  withFilter(
+                (_, __, {pubsub, user}) => {
+                    
+                    if(!user) throw new AuthenticationError('Unauthencated');
+                    return pubsub.asyncIterator('HANG_UP')
+                },
+                async ({newHangUp}, _, {user}) => {
+                    console.log('newHangUp: ', newHangUp);
+                    if(newHangUp.to === user.username){
                         return true;
                     }
                     return false;

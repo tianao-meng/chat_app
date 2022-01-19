@@ -1,173 +1,26 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, {useEffect, useState, useRef} from 'react'
 import {Row, Col, Button } from 'react-bootstrap'
-import {Link, useNavigate} from 'react-router-dom'
+import {Link} from 'react-router-dom'
 import {useAuthDispatch, useAuthState} from '../../context/auth'
 import {useVideoDispatch, useVideoState} from '../../context/video'
 import {useMessageDispatch} from '../../context/message'
-import { gql, useSubscription, useMutation } from '@apollo/client'
+import { useSubscription, useMutation } from '@apollo/client'
 import Users from './Users'
 import Messages from './Messages'
+import {NEW_MESSAGE, NEW_REACTION, NEW_VIDEO_INVITATION, NEW_VIDEO_RESPONSE, NEW_SDP, NEW_ICE, NEW_HANG_UP} from '../../util/subscriptionGql'
+import {SEND_VIDEO_INVITATION, SEND_RESPONSE_VIDEO_INVITATION, SEND_SDP, SEND_ICE, HANG_UP} from '../../util/mutationGql'
+import p2pClietClass from '../../util/p2pClient'
 
-const NEW_MESSAGE = gql`
-    subscription newMessage{
-        newMessage{
-            uuid
-            from
-            to
-            content
-            createdAt
-        }
-    }
-`
-const NEW_REACTION = gql`
-    subscription newReaction{
-        newReaction{
-            uuid
-            content
-            message{
-                uuid
-                from
-                to
-            }
-        }
-    }
-`
-const NEW_VIDEO_INVITATION = gql`
-    subscription newVideoInvitation{
-        newVideoInvitation{
-            
-                from
-                to
-            
-            
-        }
-    }
-`
-const NEW_VIDEO_RESPONSE = gql`
-    subscription newVideoResponse{
-        newVideoResponse{
-            
-                from
-                to
-                content
-            
-            
-        }
-    }
-`
-const NEW_SDP = gql`
-    subscription newSdp{
-        newSdp{
-            
-                from
-                to
-                sdp{
-                    sdp,
-                    type
-                }
-            
-            
-        }
-    }
-`
-const NEW_ICE = gql`
-    subscription newIce{
-        newIce{
-            
-                from
-                to
-                ice{
-                    address,
-                    candidate,
-                    component,
-                    foundation,
-                    port,
-                    priority,
-                    protocol,
-                    relatedAddress,
-                    relatedPort,
-                    sdpMLineIndex,
-                    sdpMid,
-                    tcpType,
-                    type,
-                    usernameFragment,
-                }
-            
-            
-        }
-    }
-`
-const SEND_VIDEO_INVITATION = gql`
-    mutation sendVideoInvitation($to:String!){
-        sendVideoInvitation(to: $to){
 
-                from
-                to
-            
-        }
-    }
-`
-const SEND_RESPONSE_VIDEO_INVITATION = gql`
-    mutation responseVideoInvitation($to:String!, $agreeOrNot:String!){
-        responseVideoInvitation(to: $to, agreeOrNot:$agreeOrNot){
-            
-                from
-                to
-                content
-            
-        }
-    }
-`
-const SEND_SDP = gql`
-    mutation sendSdp($sdp:RTCSessionDescriptionInitInput!, $to:String!){
-        sendSdp(to: $to, sdp:$sdp){
-            
-                from
-                to
-                sdp{
-                    sdp
-                    type
-                }
-            
-        }
-    }
-`
-const SEND_ICE = gql`
-
-    mutation sendIce($ice:RTCIceCandidateInput, $to:String!){
-        sendIce(to: $to, ice:$ice){
-           
-                from
-                to
-                ice{
-                    address,
-                    candidate,
-                    component,
-                    foundation,
-                    port,
-                    priority,
-                    protocol,
-                    relatedAddress,
-                    relatedPort,
-                    sdpMLineIndex,
-                    sdpMid,
-                    tcpType,
-                    type,
-                    usernameFragment,
-                }
-            
-        }
-    }
-`
 
 export default function Home() {
-    // const navigate = useNavigate();
+
     const authDispatch = useAuthDispatch();
     const videoDispatch = useVideoDispatch();
     const messageDispatch = useMessageDispatch();
     const {user} = useAuthState();
-    let {pc, stream} = useVideoState();
+    let {p2pClient} = useVideoState();
     // console.log('pc: ',pc)
 
     const [invitedTo, setInvitedTo] = useState('')
@@ -183,6 +36,8 @@ export default function Home() {
     const {data:responseVideoInvitationData, error:responseVideoInvitationError} = useSubscription (NEW_VIDEO_RESPONSE);
     const {data:newSdpData, error:newSdpError} = useSubscription (NEW_SDP);
     const {data:newIceData, error:newIceError} = useSubscription (NEW_ICE);
+    const {data:newHangUpData, error:newHangUpError} = useSubscription (NEW_HANG_UP);
+
 
     const [sendVideoInvitation ] = useMutation(SEND_VIDEO_INVITATION, {
         onError: (err)=> console.log(err),
@@ -196,11 +51,23 @@ export default function Home() {
     const [sendIce ] = useMutation(SEND_ICE, {
         onError: (err)=> console.log(err),
     });
+    const [hangup ] = useMutation(HANG_UP, {
+        onError: (err)=> console.log(err),
+    });
     
-    const offerOptions = {
-        offerToReceiveAudio: 1,
-        offerToReceiveVideo: 1
-    };
+
+
+    const initializeP2P = async () => {
+        if(p2pClient){
+            return;
+        }
+        const p2p = new p2pClietClass();
+        await p2p.setStream();
+        // console.log('p2pClient: ', p2p)
+        // console.log('stream: ',p2p.getStream())
+        localVideo.current.srcObject = p2p.getStream();
+        videoDispatch({type: 'SET_P2P_CLIENT', payload: p2p});
+    }
 
     useEffect(() => {
         if(messageError) console.log(messageError);
@@ -227,19 +94,13 @@ export default function Home() {
             return;
         }
         if(invitedTo && !receivedFrom){
-            const localStream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
-            localVideo.current.srcObject = localStream;
-            videoDispatch({type: 'SET_STREAM', payload: localStream});
-            console.log('p1 send invitation stream: ', localStream)
-
+           
+            await initializeP2P()            
             // send video invitation
             sendVideoInvitation({variables: {
                 to: invitedTo
             }})
             
-            // send offer to server
-
-
         } else {
             localVideo.current.srcObject= null;
         }
@@ -250,7 +111,6 @@ export default function Home() {
         if(videoInvitationError){
             console.log(videoInvitationError);
         }
-        console.log('videoInvitation: ', videoInvitation);
         if(!videoInvitation){
             return;
         }
@@ -268,11 +128,7 @@ export default function Home() {
        }});
        setInvitedTo(receivedFrom);
        setReceivedFrom('');
-       const localStream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
-       localVideo.current.srcObject = localStream;
-    //    remoteVideo.current.srcObject = localStream;
-       videoDispatch({type: 'SET_STREAM', payload: localStream});
-       console.log('p2 received invitation stream: ', localStream);
+       await initializeP2P();
     }
     const rejectVideo = async () => {
         await sendResponseVideoInvitation({variables: {
@@ -293,24 +149,13 @@ export default function Home() {
             const response = responseVideoInvitationData.newVideoResponse;
             const rejectOrConfirm = response.content;
             if(rejectOrConfirm === 'confirm'){
-                // eslint-disable-next-line no-const-assign
-                pc = new RTCPeerConnection({});
-                pc.onicecandidate = onIceCandidate;
-                pc.ontrack = gotRemoteStream; 
-                // console.log('stream: ', stream);
-                console.log('p1 set offer stream: ', stream);
-                stream.getTracks().forEach(track => pc.addTrack(track, stream));
-                const offer = await pc.createOffer(offerOptions);
-                // console.log('offer: ', offer);
-                await pc.setLocalDescription(offer);
-                videoDispatch({type: 'SET_PC', payload: pc});
-                await sendSdp({variables:{to: invitedTo, sdp: offer}}) 
+                p2pClient.initPc(onIceCandidate, gotRemoteStream);
+                await p2pClient.createOffer();
+                await sendSdp({variables:{to: invitedTo, sdp: p2pClient.getOffer()}}) 
                 
             } else {
-                stream = null;
+                p2pClient.closeVideo();
                 setInvitedTo('');
-                videoDispatch({type: 'SET_STREAM', payload: null});
-
             }
             
         }
@@ -327,39 +172,23 @@ export default function Home() {
         if(newSdpData.newSdp){
             const sdpRes = newSdpData.newSdp;
             if(sdpRes.sdp.type ==='offer'){
-
-                pc = new RTCPeerConnection({});
-            
-                console.log('p2 set anser stream: ', stream);
-                // console.log('answer: ', answer)
-                // pc.addEventListener('icecandidate', e => onIceCandidate(e)); 
-                videoDispatch({type: 'SET_PC', payload: pc})
-                pc.onicecandidate = onIceCandidate;
-                pc.ontrack = gotRemoteStream;
-                await pc.setRemoteDescription(sdpRes.sdp);
-                stream.getTracks().forEach(track => pc.addTrack(track, stream));
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                videoDispatch({type: 'SET_PC', payload: pc})
-                await sendSdp({variables:{to: sdpRes.from, sdp: answer}})
+                
+                p2pClient.initPc(onIceCandidate, gotRemoteStream); 
+                await p2pClient.createAnswer(sdpRes.sdp)
+                await sendSdp({variables:{to: sdpRes.from, sdp: p2pClient.getAnswer()}})
             } else {
-                console.log("sdpRes.type: ", sdpRes.sdp.type)
-                pc.setRemoteDescription(sdpRes.sdp);
-                videoDispatch({type: 'SET_PC', payload: pc})
+                p2pClient.setRemoteSdp(sdpRes.sdp);
             }
         }
     }, [newSdpData, newSdpError])
 
     const onIceCandidate = async (e) => {
-        // console.log('candidate: ', e.candidate.address);
+
         await sendIce({variables:{ice:e.candidate, to: invitedTo}});
-        // send the iceCandidate to server to redirect to another user;
 
     }
     useEffect(async () => {
-        // if(!pc){
-        //     return;
-        // }
+
         if(newIceError){
             console.log(newIceError);
         }
@@ -368,32 +197,47 @@ export default function Home() {
         }
         if(newIceData.newIce){
             const iceRes = newIceData.newIce;
-            // console.log('ice candidate: ', iceRes.ice)
-            pc.addIceCandidate(iceRes.ice);
-            videoDispatch({type: 'SET_PC', payload: pc})
+            p2pClient.addIceCandidate(iceRes.ice);
         }
     }, [newIceData, newIceError])
 
+    useEffect(() => {
+
+        if(newHangUpError){
+            console.log(newHangUpError);
+        }
+
+        if(!newHangUpData){
+            return;
+        }
+
+        closeVideo()
+
+    },[newHangUpData, newHangUpError])
+
     function gotRemoteStream(e) {
-        console.log('in')
         if (remoteVideo.current.srcObject !== e.streams[0]) {
-            console.log('remote stream: ', e.streams[0])
             
           remoteVideo.current.srcObject = e.streams[0];
           
           
         }
     }
-    // useEffect(() => {
-    //     if(remoteVideo.current){
-
-    //         console.log('remoteVideo: ', remoteVideo.current.srcObject)
-    //     }
-    // }, [pc])
 
     const logout = () => {
         authDispatch({type: 'LOGOUT'});
         window.location.href = 'login';
+    }
+
+    const closeVideo = () => {
+        p2pClient.closeVideo();
+        setInvitedTo('');
+        setReceivedFrom('');
+    }
+
+    const handleHangUp = async () => {
+          closeVideo();
+          await hangup({variables:{to: invitedTo}});
     }
 
     return (
@@ -447,7 +291,7 @@ export default function Home() {
                         </Col>
                     </Row>
                     <div className="endRow  mb-1 w-100 p-2">
-                        <i role="button" className="fas fa-stop-circle fa-2x text-danger m-auto"></i>
+                        <i role="button" className="fas fa-stop-circle fa-2x text-danger m-auto" onClick={handleHangUp}></i>
                     </div>
                 </>
             ) : null

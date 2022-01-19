@@ -1,25 +1,12 @@
 import React from 'react'
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import {Image} from 'react-bootstrap'
 import {Col} from 'react-bootstrap'
 import classNames from 'classnames'
 import {useMessageDispatch, useMessageState} from '../../context/message'
+import {GET_USERS} from '../../util/queryGql'
 
 
-const GET_USERS = gql`
-    query getUsers{
-        getUsers{
-            username createdAt imageUrl
-            latestMessage{
-                uuid
-                from
-                to
-                content
-                createdAt
-            }
-        }
-    }
-`;
 
 export default function Users() {
 

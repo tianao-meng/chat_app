@@ -3,17 +3,12 @@ import classNames from 'classnames'
 import {useAuthState} from '../../context/auth'
 import moment from 'moment'
 import {OverlayTrigger, Tooltip, Button, Popover} from 'react-bootstrap'
-import { gql,  useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
+import {REACT_TO_MESSAGE} from '../../util/mutationGql'
 
 const reactions = ['❤️', '😆', '😯', '😢', '😡', '👍', '👎']
 
-const REACT_TO_MESSAGE = gql`
-  mutation reactToMessage($uuid: String!, $content:String!){
-    reactToMessage(uuid:$uuid, content:$content){
-      uuid
-    }
-  }
-`
+
 
 export default function Message({message}) {
     const {user} = useAuthState();

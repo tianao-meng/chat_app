@@ -101,6 +101,10 @@ type iceResponse {
     to: String!,
     ice:RTCIceCandidate 
 }
+type hangUpRes {
+    success: Boolean!
+    to:String!
+}
 type Query {
 getUsers: [User]! 
 login(username: String!, password: String!): User!
@@ -120,6 +124,7 @@ type Mutation {
     responseVideoInvitation(to:String!, agreeOrNot: String!): Response!
     sendSdp(sdp:RTCSessionDescriptionInitInput, to: String!): sdpResponse!
     sendIce(ice:RTCIceCandidateInput, to: String!): iceResponse!
+    hangup(to:String!):hangUpRes!
 }
 
 type Subscription {
@@ -130,5 +135,6 @@ type Subscription {
     newVideoResponse: Response!
     newSdp: sdpResponse!
     newIce: iceResponse! 
+    newHangUp: hangUpRes!
 }
 `;
