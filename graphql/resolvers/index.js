@@ -1,5 +1,6 @@
 const userResolvers = require('./users');
 const messageResolvers = require('./messages');
+const videoResolvers = require('./video');
 const {User, Message} = require('../../models')
 
 module.exports = {
@@ -17,13 +18,16 @@ module.exports = {
     },
     Query: {
         ...userResolvers.Query,
-        ...messageResolvers.Query
+        ...messageResolvers.Query,
+        ...videoResolvers.Query,
     },
     Mutation: {
         ...userResolvers.Mutation,
-        ...messageResolvers.Mutation
+        ...messageResolvers.Mutation,
+        ...videoResolvers.Mutation
     },
     Subscription: {
-        ...messageResolvers.Subscription
+        ...messageResolvers.Subscription,
+        ...videoResolvers.Subscription
     }
 }

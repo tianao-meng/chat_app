@@ -74,3 +74,75 @@ body {
     bottom: -25px;
     font-size:0.9rem;
 }
+
+.video-container{
+    display:flex;
+    flex-direction:row;
+    // width:100%;
+    background-color:white;
+    .local-vidoe{
+        // width:300px;
+        background-color: black;
+    }
+    .remote-video{
+        // width:300px;
+        background-color: black;
+    }
+}
+.endRow{
+    background-color:white;
+    display:flex;
+    .endRow > *{
+        width:default;
+    }
+}
+.row{
+    margin-left:0 !important;
+}
+
+.invitation-dialog{
+    background: #cccebd;
+    width:300px;
+    height:120px;
+    position:fixed;
+    top: 10px;
+    left: 30%;
+    display:flex;
+    flex-direction: column;
+    justify-content:center;
+    align-items:center;
+    border-radius:15px;
+    
+    .btn-groups{
+
+        display:flex;
+        flex-direction:row;
+        width:80%;
+        justify-content: space-between;
+        margin-top: 20px;
+        
+        .accept-btn{
+            flex: 1;
+            background: rgb(130, 255, 57);
+            border:none;
+            color:white;
+            border-radius:15px;
+            width:100%;
+            &:hover{
+                background-color:rgb(104, 182, 149)
+            }
+        }
+        .reject-btn{
+            flex: 1;
+            background: rgb(247, 85, 85);
+            border:none;
+            color:white;
+            width:100%;
+            margin-left: 10px;
+            border-radius:15px;
+            &:hover{
+                background-color:rgb(182, 142, 104)
+            } 
+        }
+    }
+}

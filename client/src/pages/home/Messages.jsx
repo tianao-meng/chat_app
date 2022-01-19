@@ -33,11 +33,12 @@ const SEND_MESSAGE = gql`
     }
 `
 
-export default function Messages() {
+export default function Messages({setInvitedTo}) {
     const dispatch = useMessageDispatch();
     const {users} = useMessageState();
 
     const [content, setContent] = useState('')
+
 
     const selectedUser = users ? users.find(user => user.selected === true) : null;
     const messages = selectedUser ? selectedUser.messages : null;
@@ -93,6 +94,14 @@ export default function Messages() {
         // mutation for sending message 
     }
 
+    const sendVideoInvite = async () => {
+        if(!selectedUser){
+            return;
+        }
+        
+        setInvitedTo(selectedUser.username);
+    }
+
     return (
         <Col className="p-0" xs={10} md={8}>
             <div className="messages-box d-flex flex-column-reverse p-4">
@@ -105,6 +114,7 @@ export default function Messages() {
                     <Form.Group className="d-flex align-items-center m-0">
                         <Form.Control type="text" className="message-input rounded-pill bg-secondary border-0 p-4 " placeholder="Type a message..." value={content} onChange={e => setContent(e.target.value)} />
                         <i role="button" className="fas fa-paper-plane fa-2x text-primary ms-2" onClick={submitMessage}></i>
+                        <i role="button" className="fas fa-video fa-2x text-primary ms-2" onClick={sendVideoInvite}></i>
                     </Form.Group>
                 </Form>
             </div>
