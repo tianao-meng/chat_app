@@ -9,6 +9,7 @@ const VideoDispatchContext = createContext();
 const videoReducer = (state, action) => {
     switch (action.type) {
         case 'SET_P2P_CLIENT': 
+            console.log('in set p2p client');
             return {
                 ...state,
                 p2pClient: action.payload

@@ -10,6 +10,7 @@ class P2PConection {
     this.stream = null;
     this.offer = null;
     this.answer = null;
+    this.bufferedIce = [];
   }
 
   async setStream(){
@@ -28,10 +29,14 @@ class P2PConection {
   }
 
   createOffer = async () => {
+    if(!this.stream){
+        return;
+    }
     this.stream.getTracks().forEach(track => this.pc.addTrack(track, this.stream));
     this.offer = await this.pc.createOffer(offerOptions);
     await this.pc.setLocalDescription(this.offer);
   }
+
 
   getOffer(){
       return this.offer;
@@ -40,10 +45,14 @@ class P2PConection {
   closeVideo(){
     if (this.pc) {
         this.pc.close();
+
         this.pc = null;
-      }
-      this.stream.getTracks().forEach(track => track.stop());
-      this.stream = null;
+    }
+    if(this.stream){
+
+        this.stream.getTracks().forEach(track => track.stop());
+        this.stream = null;
+    }
 
   }
 
@@ -64,6 +73,10 @@ class P2PConection {
 
   addIceCandidate(ice){
     this.pc.addIceCandidate(ice);
+  }
+
+  addBufferedIce(ice){
+      this.bufferedIce.push(ice);
   }
 
 

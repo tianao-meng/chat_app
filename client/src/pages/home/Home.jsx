@@ -21,6 +21,7 @@ export default function Home() {
     const messageDispatch = useMessageDispatch();
     const {user} = useAuthState();
     let {p2pClient} = useVideoState();
+    // console.log('p2pClient: ', p2pClient);
     // console.log('pc: ',pc)
 
     const [invitedTo, setInvitedTo] = useState('')
@@ -58,6 +59,7 @@ export default function Home() {
 
 
     const initializeP2P = async () => {
+        console.log('p2pClient: ', p2pClient)
         if(p2pClient){
             return;
         }
@@ -67,6 +69,7 @@ export default function Home() {
         // console.log('stream: ',p2p.getStream())
         localVideo.current.srcObject = p2p.getStream();
         videoDispatch({type: 'SET_P2P_CLIENT', payload: p2p});
+        console.log('p2pClient after: ', p2pClient)
     }
 
     useEffect(() => {
@@ -87,9 +90,7 @@ export default function Home() {
         }
     }, [reactionData, reactionError])
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(async () => {
-        // console.log('localVideo: ', localVideo)
         if(localVideo.current === null){
             return;
         }
@@ -108,12 +109,15 @@ export default function Home() {
     }, [invitedTo]);
 
     useEffect(() => {
+        console.log('in video invitation');
+        
         if(videoInvitationError){
             console.log(videoInvitationError);
         }
         if(!videoInvitation){
             return;
         }
+        console.log('in video invitation data: ',videoInvitation.newVideoInvitation);
         if(videoInvitation.newVideoInvitation){
             const invitation = videoInvitation.newVideoInvitation;
             setReceivedFrom(invitation.from);
@@ -121,14 +125,24 @@ export default function Home() {
     }, [videoInvitation, videoInvitationError])
 
     const confirmVideo = async () => {
-
-       await sendResponseVideoInvitation({variables: {
-           to: receivedFrom,
-           agreeOrNot: 'confirm'
-       }});
-       setInvitedTo(receivedFrom);
+        // const to = receivedFrom;
+        // console.log('to 1: ', receivedFrom)
+        setInvitedTo(receivedFrom);
+        
+        // console.log('to 2: ', receivedFrom)
+        await initializeP2P();
+       try{
+           await sendResponseVideoInvitation({variables: {
+               to: receivedFrom,
+               agreeOrNot: 'confirm'
+           }});
+       } catch(err){
+            closeVideo();
+            console.log(err);
+            
+       }
        setReceivedFrom('');
-       await initializeP2P();
+
     }
     const rejectVideo = async () => {
         await sendResponseVideoInvitation({variables: {
@@ -143,11 +157,15 @@ export default function Home() {
             console.log(responseVideoInvitationError);
         }
         if(!responseVideoInvitationData){
+
             return;
         }
         if(responseVideoInvitationData.newVideoResponse){
             const response = responseVideoInvitationData.newVideoResponse;
             const rejectOrConfirm = response.content;
+            if(!p2pClient){
+                return;
+            }
             if(rejectOrConfirm === 'confirm'){
                 p2pClient.initPc(onIceCandidate, gotRemoteStream);
                 await p2pClient.createOffer();
@@ -168,12 +186,18 @@ export default function Home() {
         if(!newSdpData){
             return;
         }
+        // if(!p2pClient){
+        //     return;
+        // }
 
         if(newSdpData.newSdp){
             const sdpRes = newSdpData.newSdp;
+            if(!p2pClient){
+                return;
+            }
             if(sdpRes.sdp.type ==='offer'){
-                
-                p2pClient.initPc(onIceCandidate, gotRemoteStream); 
+                 
+                await p2pClient.initPc(onIceCandidate, gotRemoteStream); 
                 await p2pClient.createAnswer(sdpRes.sdp)
                 await sendSdp({variables:{to: sdpRes.from, sdp: p2pClient.getAnswer()}})
             } else {
@@ -195,7 +219,13 @@ export default function Home() {
         if(!newIceData){
             return;
         }
+        // if(!p2pClient){
+        //     return;
+        // }
         if(newIceData.newIce){
+            if(!p2pClient){
+                return;
+            }
             const iceRes = newIceData.newIce;
             p2pClient.addIceCandidate(iceRes.ice);
         }
@@ -230,9 +260,13 @@ export default function Home() {
     }
 
     const closeVideo = () => {
+        if(!p2pClient){
+            return;
+        }
         p2pClient.closeVideo();
         setInvitedTo('');
         setReceivedFrom('');
+        videoDispatch({type: 'SET_P2P_CLIENT', payload: null});
     }
 
     const handleHangUp = async () => {
@@ -298,7 +332,7 @@ export default function Home() {
         }
         <Row className="bg-white w-100">
             <Users />
-            <Messages setInvitedTo={setInvitedTo}/>
+            <Messages setInvitedTo={setInvitedTo} invitedTo={invitedTo}/>
         </Row>
         </>
     )

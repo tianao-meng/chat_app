@@ -9,7 +9,7 @@ import {SEND_MESSAGE} from '../../util/mutationGql'
 import {GET_MESSAGES} from '../../util/queryGql'
 
 
-export default function Messages({setInvitedTo}) {
+export default function Messages({setInvitedTo, invitedTo}) {
     const dispatch = useMessageDispatch();
     const {users} = useMessageState();
 
@@ -90,7 +90,12 @@ export default function Messages({setInvitedTo}) {
                     <Form.Group className="d-flex align-items-center m-0">
                         <Form.Control type="text" className="message-input rounded-pill bg-secondary border-0 p-4 " placeholder="Type a message..." value={content} onChange={e => setContent(e.target.value)} />
                         <i role="button" className="fas fa-paper-plane fa-2x text-primary ms-2" onClick={submitMessage}></i>
-                        <i role="button" className="fas fa-video fa-2x text-primary ms-2" onClick={sendVideoInvite}></i>
+                        {
+                            !invitedTo ? <i role="button" className="fas fa-video fa-2x text-primary ms-2" onClick={sendVideoInvite}></i> : <i className="fas fa-video fa-2x text-dark ms-2"></i>
+                            
+                        }
+                        
+                        
                     </Form.Group>
                 </Form>
             </div>
