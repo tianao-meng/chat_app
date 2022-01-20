@@ -19,15 +19,15 @@
 <p>
 3. User List and messages container.
 <p align="center">
-<img src='Images/UserList.png' width='700' height='350' />
+<img src='Images/UserList.png' width='900' height='480' />
 <p>
 4. Video Chat Invitation.
 <p align="center">
-<img src='Images/VideoChatInvitation.png' width='390' height='800' />
+<img src='Images/VideoChatInvitation.png' width='900' height='480' />
 <p>
 5. Video Chat.
 <p align="center">
-<img src='Images/VideoChat.png' width='390' height='800' />
+<img src='Images/VideoChat.png' width='900' height='480' />
 <p>
 
 
