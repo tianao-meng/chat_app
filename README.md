@@ -23,11 +23,11 @@
 <p>
 4. Video Chat Invitation.
 <p align="center">
-<img src='Images/VideoChatInvitation.png' width='900' height='480' />
+<img src='Images/VideoChatInvitation1.png' width='900' height='480' />
 <p>
 5. Video Chat.
 <p align="center">
-<img src='Images/VideoChat.png' width='900' height='480' />
+<img src='Images/VideoChat1.png' width='900' height='480' />
 <p>
 
 
